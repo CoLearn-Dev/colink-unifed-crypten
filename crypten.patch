@@ -1,0 +1,45 @@
+From bfedf011eb4e9634df49a6f630cac3cefd64d275 Mon Sep 17 00:00:00 2001
+From: stneng <git@stneng.com>
+Date: Tue, 19 Apr 2022 08:11:02 +0000
+Subject: [PATCH] crypten patch
+
+---
+ crypten/communicator/communicator.py | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/crypten/communicator/communicator.py b/crypten/communicator/communicator.py
+index 199c9c4..218d940 100644
+--- a/crypten/communicator/communicator.py
++++ b/crypten/communicator/communicator.py
+@@ -7,6 +7,7 @@
+ 
+ import sys
+ import timeit
++import flbenchmark.logging
+ 
+ from crypten.config import cfg
+ 
+@@ -144,6 +145,7 @@ class Communicator:
+         """Updates log of communication statistics."""
+         self.comm_rounds += 1
+         self.comm_bytes += nelement * self.BYTES_PER_ELEMENT
++        self._logging_report_byte = nelement * self.BYTES_PER_ELEMENT
+ 
+     def _log_communication_time(self, comm_time):
+         self.comm_time += comm_time
+@@ -218,7 +220,11 @@ def _logging(func):
+ 
+             # execute and time the MPI collective:
+             tic = timeit.default_timer()
+-            result = func(self, *args, **kwargs)
++            logger = flbenchmark.logging.Logger()
++            with logger.communication(target_id=-1) as c:
++                result = func(self, *args, **kwargs)
++                c.report_metric('byte', self._logging_report_byte)
++
+             toc = timeit.default_timer()
+             self._log_communication_time(toc - tic)
+ 
+-- 
+2.17.1
+

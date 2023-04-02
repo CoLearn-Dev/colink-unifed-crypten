@@ -7,7 +7,7 @@ from typing import List
 
 import colink as CL
 
-from unifed.frameworks.example.util import store_error, store_return, GetTempFileName, get_local_ip
+from unifed.frameworks.crypten.util import store_error, store_return, GetTempFileName, get_local_ip
 
 pop = CL.ProtocolOperator(__name__)
 UNIFED_TASK_DIR = "unifed:task"
@@ -15,7 +15,7 @@ UNIFED_TASK_DIR = "unifed:task"
 def load_config_from_param_and_check(param: bytes):
     unifed_config = json.loads(param.decode())
     framework = unifed_config["framework"]
-    assert framework == "example"
+    assert framework == "crypten"
     deployment = unifed_config["deployment"]
     if deployment["mode"] != "colink":
         raise ValueError("Deployment mode must be colink")
@@ -57,7 +57,7 @@ def run_external_process_and_collect_result(cl: CL.CoLink, participant_id,  role
         })
 
 
-@pop.handle("unifed.example:server")
+@pop.handle("unifed.crypten:server")
 @store_error(UNIFED_TASK_DIR)
 @store_return(UNIFED_TASK_DIR)
 def run_server(cl: CL.CoLink, param: bytes, participants: List[CL.Participant]):
@@ -71,7 +71,7 @@ def run_server(cl: CL.CoLink, param: bytes, participants: List[CL.Participant]):
     return run_external_process_and_collect_result(cl, participant_id, "server", server_ip)
 
 
-@pop.handle("unifed.example:client")
+@pop.handle("unifed.crypten:client")
 @store_error(UNIFED_TASK_DIR)
 @store_return(UNIFED_TASK_DIR)
 def run_client(cl: CL.CoLink, param: bytes, participants: List[CL.Participant]):
