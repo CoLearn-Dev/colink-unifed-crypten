@@ -8,7 +8,7 @@ WORKDIR /
 RUN git clone https://github.com/facebookresearch/CrypTen.git crypten_src
 WORKDIR /crypten_src
 COPY crypten.patch /crypten_src
-RUN git checkout 909df45b239198243e365994a86027ab4203b2f6 && \
+RUN git checkout 891fa4709e4849ff50ace6933f20375b04b3f722 && \
     git apply crypten.patch
 ENV SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True
 RUN pip install .
