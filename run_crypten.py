@@ -214,7 +214,7 @@ def train(config):
         model.train()
 
         optimizer = crypten.optim.SGD(model.parameters(), lr=config['training']['learning_rate'], **config['training']['optimizer_param'])
-        num_epochs = config['training']['epochs']
+        num_epochs = config['training']['global_epochs']
         batch_size = config['training']['batch_size']
         num_samples = feature.size(0)
         if batch_size == -1:

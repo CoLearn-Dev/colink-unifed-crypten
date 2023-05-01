@@ -29,7 +29,7 @@
     ]
   },
   "training": {
-    "epochs": 30,
+    "global_epochs": 30,
     "batch_size": 32,
     "learning_rate": 0.01,
     "client_per_round": 2,
