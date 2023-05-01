@@ -17,10 +17,10 @@ def simulate_with_config(config_file_path):
     config_participants = config["deployment"]["participants"]
     cls = []
     participants = []
-    for _, role in config_participants:  # given user_ids are omitted and we generate new ones here
+    for p in config_participants:  # given user_ids are omitted and we generate new ones here
         cl = CL.InstantServer().get_colink().switch_to_generated_user()
         pop.run_attach(cl)
-        participants.append(CL.Participant(user_id=cl.get_user_id(), role=role))
+        participants.append(CL.Participant(user_id=cl.get_user_id(), role=p["role"]))
         cls.append(cl)
     task_id = cls[0].run_task("unifed.crypten", json.dumps(config), participants, True)
     results = {}
