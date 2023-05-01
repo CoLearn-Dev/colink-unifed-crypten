@@ -2,7 +2,7 @@ FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime as pytorch-base
 
 RUN apt-get update && apt-get install -y git wget unzip
 
-RUN pip install colink flbenchmark
+RUN pip install colink flbenchmark scikit-learn
 
 WORKDIR /
 RUN git clone https://github.com/facebookresearch/CrypTen.git crypten_src

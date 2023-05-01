@@ -21,54 +21,48 @@ def load_config_from_param_and_check(param: bytes):
         raise ValueError("Deployment mode must be colink")
     return unifed_config
 
-def run_external_process_and_collect_result(cl: CL.CoLink, participant_id,  role: str, server_ip: str):
-    with GetTempFileName() as temp_log_filename, \
-        GetTempFileName() as temp_output_filename:
-        # note that here, you don't have to create temp files to receive output and log
-        # you can also expect the target process to generate files and then read them
 
-        # start training procedure
-        process = subprocess.Popen(
-            [
-                "unifed-example-workload",  
-                # takes 4 args: mode(client/server), participant_id, output, and logging destination
-                role,
-                str(participant_id),
-                temp_output_filename,
-                temp_log_filename,
-            ],
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE
-        )
-        # gather result
-        stdout, stderr = process.communicate()
-        returncode = process.returncode
-        with open(temp_output_filename, "rb") as f:
-            output = f.read()
-        cl.create_entry(f"{UNIFED_TASK_DIR}:{cl.get_task_id()}:output", output)
-        with open(temp_log_filename, "rb") as f:
-            log = f.read()
-        cl.create_entry(f"{UNIFED_TASK_DIR}:{cl.get_task_id()}:log", log)
-        return json.dumps({
-            "server_ip": server_ip,
-            "stdout": stdout.decode(),
-            "stderr": stderr.decode(),
-            "returncode": returncode,
-        })
-
-
-@pop.handle("unifed.crypten:server")
-@store_error(UNIFED_TASK_DIR)
-@store_return(UNIFED_TASK_DIR)
-def run_server(cl: CL.CoLink, param: bytes, participants: List[CL.Participant]):
-    unifed_config = load_config_from_param_and_check(param)
-    # for certain frameworks, clients need to learn the ip of the server
-    # in that case, we get the ip of the current machine and send it to the clients
-    server_ip = get_local_ip()
-    cl.send_variable("server_ip", server_ip, [p for p in participants if p.role == "client"])
-    # run external program
-    participant_id = [i for i, p in enumerate(participants) if p.user_id == cl.get_user_id()][0]
-    return run_external_process_and_collect_result(cl, participant_id, "server", server_ip)
+def run_crypten(cl: CL.CoLink, participants, participant_id, role: str, server_ip: str, unifed_config):
+    communicator_args = {
+        'WORLD_SIZE': str(len(participants)),
+        'RANK': str(participant_id),
+        'RENDEZVOUS': 'env://',
+        'MASTER_ADDR': server_ip,
+        'MASTER_PORT': '50000',
+        'BACKEND': 'gloo'
+    }
+    # envs={}
+    # for key, val in communicator_args.items():
+    #     envs[key] = str(val)
+    temp_conf_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+    temp_conf_file.write(json.dumps(unifed_config))
+    temp_conf_file.close()
+    # start training procedure
+    process = subprocess.Popen(
+        [
+            sys.executable,
+            "run_crypten.py",
+            temp_conf_file.name,
+        ],
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.PIPE,
+        env={**os.environ, **communicator_args}
+    )
+    # gather result
+    stdout, stderr = process.communicate()
+    returncode = process.returncode
+    # with open(temp_output_filename, "rb") as f:
+    #     output = f.read()
+    # cl.create_entry(f"{UNIFED_TASK_DIR}:{cl.get_task_id()}:output", output)
+    # with open(temp_log_filename, "rb") as f:
+    #     log = f.read()
+    # cl.create_entry(f"{UNIFED_TASK_DIR}:{cl.get_task_id()}:log", log)
+    return json.dumps({
+        "server_ip": server_ip,
+        "stdout": stdout.decode(),
+        "stderr": stderr.decode(),
+        "returncode": returncode,
+    })
 
 
 @pop.handle("unifed.crypten:client")
@@ -77,10 +71,11 @@ def run_server(cl: CL.CoLink, param: bytes, participants: List[CL.Participant]):
 def run_client(cl: CL.CoLink, param: bytes, participants: List[CL.Participant]):
     unifed_config = load_config_from_param_and_check(param)
     # get the ip of the server
-    server_in_list = [p for p in participants if p.role == "server"]
-    assert len(server_in_list) == 1
-    p_server = server_in_list[0]
-    server_ip = cl.recv_variable("server_ip", p_server).decode()
-    # run external program
+    if cl.get_participant_index(participants)==0:
+        server_ip = get_local_ip()
+        cl.send_variable("server_ip", server_ip, participants)
+    else:
+        server_ip = cl.recv_variable("server_ip", participants[0]).decode()
+    # run crypten
     participant_id = [i for i, p in enumerate(participants) if p.user_id == cl.get_user_id()][0]
-    return run_external_process_and_collect_result(cl, participant_id, "client", server_ip)
+    return run_crypten(cl, participants, participant_id, "client", server_ip,unifed_config)

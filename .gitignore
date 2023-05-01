@@ -137,3 +137,5 @@ dmypy.json
 notes.md
 log/
 temp.json
+
+/data

@@ -1,23 +1,11 @@
 {
-  "framework": "example",
-  "algorithm": "fedavg",
-  "dataset": "default_credit_horizontal",
+  "framework": "crypten",
+  "algorithm": "mpc",
+  "dataset": "breast_vertical",
   "model": "mlp_128",
   "deployment": {
     "mode": "colink",
     "participants": [
-      [
-        "0236f00d8e378b20634c901acfe004f0f85f5cdd7fa6377dab79e093bc62eabf9c",
-        "server"
-      ],
-      [
-        "0261bff483acdeb79ff332f003249cb8e303896487509c670ab3fc84c00acb16fd",
-        "client"
-      ],
-      [
-        "0349b8bff5ee389899319b1f6171016de95faed0179cce89521b5a066e3d8f5e2d",
-        "client"
-      ],
       [
         "0230eb8c64afe6aeed0d80248a0cdd0ebb92a8bbc9fb49421c0156ae55b6d5fe1d",
         "client"
@@ -33,6 +21,7 @@
     "batch_size": 32,
     "learning_rate": 0.01,
     "client_per_round": 2,
+    "loss_func": "cross_entropy",
     "optimizer": "sgd",
     "optimizer_param": {
       "momentum": 0.9,

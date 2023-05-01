@@ -1,6 +1,6 @@
 import sys
 
-from unifed.frameworks.example import protocol
+from unifed.frameworks.crypten import protocol
 
 
 def run_protocol():
