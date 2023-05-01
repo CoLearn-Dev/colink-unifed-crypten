@@ -4,3 +4,26 @@ version = "0.0.0"
 keywords = ["federated learning", "machine learning"]
 description = "crypten UniFed protocol."
 language = "python"
+install_script = """
+if { conda env list | grep 'colink-protocol-unifed-crypten'; } >/dev/null 2>&1; then
+    conda env remove -n colink-protocol-unifed-crypten
+fi
+conda create -n colink-protocol-unifed-crypten python=3.9 -y
+conda activate colink-protocol-unifed-crypten
+pip install colink flbenchmark scikit-learn
+
+git clone https://github.com/facebookresearch/CrypTen.git crypten_src
+cp crypten.patch crypten_src/
+cd crypten_src
+git checkout 49f2fb2cdad8c7620b4db62fda0d18553f0836c0
+git apply crypten.patch
+export SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True
+pip install .
+cd ..
+
+pip install .
+"""
+entrypoint = """
+conda activate colink-protocol-unifed-crypten
+unifed-crypten > debug.txt 2>&1
+"""
