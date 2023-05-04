@@ -23,7 +23,7 @@ def compute_accuracy(output, labels):
 
 
 def train(config):
-    flbd = flbenchmark.datasets.FLBDatasets('./data')
+    flbd = flbenchmark.datasets.FLBDatasets('~/flbenchmark.working/data')
 
     train_dataset, test_dataset = flbd.fateDatasets(config['dataset'])
 
